@@ -14,7 +14,7 @@ public class Driver {
 	public static ArrayList<String> attributes = new ArrayList<String>();
 	public static ArrayList<Instance> data = new ArrayList<Instance>();
 	public static String classificationName = new String();
-	public static Node root = new Node();
+	public static Node root;
 	
 	public static void parseFile()
 	{
@@ -51,10 +51,6 @@ public class Driver {
 					data.add(instance);
 				}
 			}
-			
-//			printAttributes();
-//			printData();
-//			System.out.println(classificationName);
 		}
 		catch(FileNotFoundException e)
 		{
@@ -66,40 +62,11 @@ public class Driver {
 		}
 	}
 	
-	public static void calculateI()
-	{
-		int total = 0, positives = 0, negatives = 0;
-		for(Instance s : data)
-		{
-			if (s.getColumn(attributes.size()) == 1)
-			{
-				positives += 1;
-			}
-			else
-			{
-				negatives += 1;
-			}
-			
-			total += 1;
-		}
-		
-		System.out.println("Postive: " + positives + " Negative: " + negatives + " Total: " + total);
-		
-		double pValue, nValue, pFraction, nFraction;
-		pFraction = (double) positives / total;
-		nFraction = (double) negatives / total;
-		pValue = Math.log(pFraction) / Math.log(2);
-		nValue = Math.log(nFraction) / Math.log(2);
-		
-		double value = - (pFraction * pValue) - (nFraction - nValue);
-		System.out.println("P Value: " + pValue + " N Value " + nValue);
-		System.out.println("I Value: " + value);
-	}
-	
 	public static void main(String[] args)
 	{
 		parseFile();
-		calculateI();
+		root = new Node(null, "", attributes, data);
+		root.calculateI();
 	}
 	
 	public static void printAttributes()

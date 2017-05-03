@@ -17,21 +17,44 @@ public class Instance {
 				data.add( Integer.parseInt(String.valueOf(array[i])) );
 			}
 		}
-	}
-	
-	public void calculate()
-	{
 		
-	}
-	
-	public void informationGain()
-	{
-		
+//		printData();
 	}
 	
 	public int getColumn(int column)
 	{
 		return data.get(column);
+	}
+	
+	public int getColumns(int column)
+	{
+		if ((data.get(column) == 1) && (data.get(data.size() - 1) == 1))
+		{
+//			System.out.println("Both True");
+			return 1;
+		}
+		else if ((data.get(column) == 0) && (data.get(data.size() - 1) == 1))
+		{
+//			System.out.println("Neg Pos");
+			return 2;
+		}
+		else if ((data.get(column) == 1) && (data.get(data.size() - 1) == 0))
+		{
+//			System.out.println("Pos Neg");
+			return 3;
+		}
+		else if((data.get(column) == 0) && (data.get(data.size() - 1) == 0))
+		{
+//			System.out.println("Both Neg");
+			return 4;
+		}
+		
+		return 0;
+	}
+	
+	public void removeColumn(int i)
+	{
+		data.remove(i);
 	}
 	
 	public String toString()
