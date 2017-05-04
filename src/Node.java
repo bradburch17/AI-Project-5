@@ -5,11 +5,13 @@ public class Node {
 	private String padding = new String();
 	private ArrayList<String> attributes = new ArrayList<String>();
 	private ArrayList<Instance> data = new ArrayList<Instance>();
+	private ArrayList<Instance> data2 = new ArrayList<Instance>();
 	private String classificationName = Driver.classificationName;
 	private Node parent;
 	private String attribute;
 	public Node left_yes;
 	public Node right_no;
+	
 	
 	public Node(Node parent, String padding, ArrayList<String> attributes, ArrayList<Instance> data)
 	{
@@ -70,8 +72,42 @@ public class Node {
 		calculateIa(value);
 	}
 	
+	public void updateData(int column, int direction){
+	// Creates a new table to look through based on the attribute previously selected
+	// The instance is the row in the table - the s.getColumn(n) looks at the value in the row s at column n
+		if(direction == 0){
+
+			for(Instance s : data)
+			{
+				System.out.println("S column: " + s.getColumn(column));
+				if( s.getColumn(column) == 0)
+				{
+					System.out.println("NOPE");
+				}
+				else{
+					System.out.println("Adding to data2");
+					data2.add(s);
+				}
+			}
+		}
+		else {
+			for(Instance s : data)
+			{
+				if( s.getColumn(column) == 1)
+				{
+					
+				}
+				else{
+					data2.add(s);
+				}
+			}
+		}
+		System.out.println(data2.size());
+	}
+	
 	public void calculateIa(double iValue)
 	{
+		// Calculates the Ia value for an attribute
 		int column = 0, gainColumn = 0;
 		double iaValue, temp, gain = 0.0;
 		
@@ -124,20 +160,33 @@ public class Node {
 		this.attribute = attributes.get(gainColumn);
 		System.out.println("\nGain: " + gain + " gainColumn: " + gainColumn + " Attribute: " + attributes.get(gainColumn));
 		attributes.remove(gainColumn);
+		
+		//Removes the attribute that was selected and updates the Data to create a new table to evaluate
+		// Continues evaluation one direction until there are no more children; then moves to the other direction
 		for(Instance i : data)
 		{
 			i.removeColumn(gainColumn);
 		}
-		Node child = new Node(this, "	", attributes, data);
+		
+		updateData(0,gainColumn);
+		
+		Node child = new Node(this, "	", attributes, data2);
 		if (!attributes.isEmpty())
 		{
 			child.calculateI();
 		}
+		updateData(1,gainColumn);
+		Node child2 = new Node(this, "	", attributes, data2);
+		if (!attributes.isEmpty())
+		{
+			child2.calculateI();
+		}
 		
 	}
-	
+
 	public double calculateInformationContent(int allPositive, int allNegative, int posNeg, int negPos, int total)
 	{
+		// Creates the Information content equation
 		double positives, negatives, posFraction = 0, negFraction = 0, negPosFraction = 0, posNegFraction = 0;
 		positives = allPositive + posNeg;
 		negatives = allNegative + negPos;
@@ -194,6 +243,7 @@ public class Node {
 	
 	public double calculateGain(double iValue, double iaValue)
 	{
+		// Caculates the gain of the attributes
 		return iValue - iaValue;
 	}
 	
