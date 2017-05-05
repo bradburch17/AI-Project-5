@@ -5,10 +5,11 @@ public class Node {
 	private String padding = new String();
 	private ArrayList<String> attributes = new ArrayList<String>();
 	private ArrayList<Instance> data = new ArrayList<Instance>();
-	private ArrayList<Instance> data2 = new ArrayList<Instance>();
+//	private ArrayList<Instance> data2 = new ArrayList<Instance>();
 	private String classificationName = Driver.classificationName;
 	private Node parent;
 	private String attribute;
+	private String label;
 	public Node left_yes;
 	public Node right_no;
 	
@@ -16,6 +17,22 @@ public class Node {
 	public Node(Node parent, String padding, ArrayList<String> attributes, ArrayList<Instance> data)
 	{
 		System.out.println();
+		if(data.size() == 0)
+		{
+			return;
+		}
+		else if (attributesSame()) //This is useful so that it doesn't say 'Smelly' at the end. Need to implement to check if the attributes are the same, meaning not worth our time
+		{
+			this.attribute = attributes.get(0);
+		}
+		else if (attributes.size() == 0)
+		{
+			return;
+		}
+		else
+		{
+			
+		}
 		/*
 		 * if (there are no examples)
 		 * 		return default decision
@@ -38,6 +55,18 @@ public class Node {
 		this.attributes = new ArrayList<String>(attributes);
 		this.data = new ArrayList<Instance>(data);
 		this.parent = parent;
+	}
+	
+	public boolean attributesSame()
+	{
+		if (data.size() == 2)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	public void calculateI()
@@ -75,34 +104,26 @@ public class Node {
 	public void updateData(int column, int direction){
 	// Creates a new table to look through based on the attribute previously selected
 	// The instance is the row in the table - the s.getColumn(n) looks at the value in the row s at column n
-		if(direction == 0){
+		if(direction == 1){
 
 			for(Instance s : data)
 			{
-				System.out.println("S column: " + s.getColumn(column));
-				if( s.getColumn(column) == 0)
+				if(s.getColumn(column) == 1)
 				{
-					System.out.println("NOPE");
-				}
-				else{
-					System.out.println("Adding to data2");
-					data2.add(s);
+//					data2.add(s);
 				}
 			}
 		}
 		else {
 			for(Instance s : data)
 			{
-				if( s.getColumn(column) == 1)
+				if(s.getColumn(column) == 0)
 				{
-					
-				}
-				else{
-					data2.add(s);
+//					data2.add(s);
 				}
 			}
 		}
-		System.out.println(data2.size());
+//		System.out.println(data2.size());
 	}
 	
 	public void calculateIa(double iValue)
@@ -110,6 +131,7 @@ public class Node {
 		// Calculates the Ia value for an attribute
 		int column = 0, gainColumn = 0;
 		double iaValue, temp, gain = 0.0;
+		boolean leftDone = false, rightDone = false;
 		
 		while (column < attributes.size())
 		{
@@ -137,13 +159,13 @@ public class Node {
 				
 				total++;
 			}
-			System.out.println("\n" + attributes.get(column));
-			System.out.println("total: " + total);
-			System.out.println("All Pos: " + allPositive + " Neg Pos: " + negPos + " Pos Neg: " + posNeg + " All Neg: " + allNegative);
+//			System.out.println("\n" + attributes.get(column));
+//			System.out.println("total: " + total);
+//			System.out.println("All Pos: " + allPositive + " Neg Pos: " + negPos + " Pos Neg: " + posNeg + " All Neg: " + allNegative);
 			
 			iaValue = calculateInformationContent(allPositive, allNegative, posNeg, negPos, total);
 			temp = calculateGain(iValue, iaValue);
-			System.out.println("Gain: " + temp);
+//			System.out.println("Gain: " + temp);
 			if (column == 0)
 			{
 				gain = calculateGain(iValue, iaValue);
@@ -153,14 +175,30 @@ public class Node {
 			{
 				gain = temp;
 				gainColumn = column;
+				if(posNeg == 0)
+				{
+					leftDone = true;
+					rightDone = false;
+				}
+				else if (negPos == 0)
+				{
+					rightDone = true;
+					leftDone = false;
+				}
+				else
+				{
+					leftDone = false;
+					rightDone = false;
+				}
 			}
 			
 			column++;
 		}
 		this.attribute = attributes.get(gainColumn);
-		System.out.println("\nGain: " + gain + " gainColumn: " + gainColumn + " Attribute: " + attributes.get(gainColumn));
-		attributes.remove(gainColumn);
 		
+//		System.out.println("\nGain: " + gain + " gainColumn: " + gainColumn + " Attribute: " + attributes.get(gainColumn));
+		
+		attributes.remove(gainColumn);
 		//Removes the attribute that was selected and updates the Data to create a new table to evaluate
 		// Continues evaluation one direction until there are no more children; then moves to the other direction
 		for(Instance i : data)
@@ -168,20 +206,36 @@ public class Node {
 			i.removeColumn(gainColumn);
 		}
 		
-		updateData(0,gainColumn);
+		System.out.println(toString());
 		
-		Node child = new Node(this, "	", attributes, data2);
 		if (!attributes.isEmpty())
 		{
-			child.calculateI();
-		}
-		updateData(1,gainColumn);
-		Node child2 = new Node(this, "	", attributes, data2);
-		if (!attributes.isEmpty())
-		{
-			child2.calculateI();
-		}
-		
+			if (!leftDone)
+			{
+				System.out.println(attribute + " Left: ");
+				Node child = new Node(this, "	", attributes, data);
+				child.calculateI();
+				left_yes = child;
+			}
+			else if (leftDone)
+			{
+				System.out.println(attribute + " Leftd: ");
+				System.out.println("We are done. what now? \n");
+			}
+			
+			if (!rightDone)
+			{
+				System.out.println(attribute + " Right: ");
+				Node child = new Node(this, "	", attributes, data);
+				child.calculateI();
+				right_no = child;
+			}
+			else if (rightDone)
+			{
+				System.out.println(attribute + " Rightd: ");
+				System.out.println("We are done. What now? ");
+			}
+		}		
 	}
 
 	public double calculateInformationContent(int allPositive, int allNegative, int posNeg, int negPos, int total)
@@ -237,7 +291,7 @@ public class Node {
 		double negativeSide = negatives/total * (negLog + posNegLog);
 
 		double value = positiveSide + negativeSide;
-		System.out.println(value);
+//		System.out.println(value);
 		return value;
 	}
 	
@@ -249,6 +303,21 @@ public class Node {
 	
 	public void addLeftNode()
 	{
+		ArrayList<Instance> newData = new ArrayList<Instance>(data);
 		
+		for(Instance s : newData)
+		{
+			if (s.getColumn(1) == 0)
+			{
+				
+			}
+		}
+	}
+	
+	public String toString()
+	{
+		String s =  attribute ;
+		
+		return s;
 	}
 }

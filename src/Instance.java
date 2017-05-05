@@ -30,22 +30,18 @@ public class Instance {
 	{
 		if ((data.get(column) == 1) && (data.get(data.size() - 1) == 1))
 		{
-//			System.out.println("Both True");
 			return 1;
 		}
 		else if ((data.get(column) == 0) && (data.get(data.size() - 1) == 1))
 		{
-//			System.out.println("Neg Pos");
 			return 2;
 		}
 		else if ((data.get(column) == 1) && (data.get(data.size() - 1) == 0))
 		{
-//			System.out.println("Pos Neg");
 			return 3;
 		}
 		else if((data.get(column) == 0) && (data.get(data.size() - 1) == 0))
 		{
-//			System.out.println("Both Neg");
 			return 4;
 		}
 		

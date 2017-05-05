@@ -13,8 +13,14 @@ public class Driver {
 
 	public static ArrayList<String> attributes = new ArrayList<String>();
 	public static ArrayList<Instance> data = new ArrayList<Instance>();
+	public static ArrayList<Node> tree = new ArrayList<Node>();
 	public static String classificationName = new String();
 	public static Node root;
+	
+	public void addNode(Node n)
+	{
+		tree.add(n);
+	}
 	
 	public static void parseFile()
 	{
