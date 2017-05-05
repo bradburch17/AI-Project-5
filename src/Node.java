@@ -5,11 +5,10 @@ public class Node {
 	private String padding = new String();
 	private ArrayList<String> attributes = new ArrayList<String>();
 	private ArrayList<Instance> data = new ArrayList<Instance>();
-//	private ArrayList<Instance> data2 = new ArrayList<Instance>();
 	private String classificationName = Driver.classificationName;
 	private Node parent;
 	private String attribute;
-	private String label;
+	private String label = new String();
 	public Node left_yes;
 	public Node right_no;
 	
@@ -57,6 +56,19 @@ public class Node {
 		this.parent = parent;
 	}
 	
+	public Node(String attribute, boolean neg)
+	{
+		this.attribute = attribute;
+		if(neg)
+		{
+			this.label = " - False";
+		}
+		else
+		{
+			this.label = " - True";
+		}
+	}
+	
 	public boolean attributesSame()
 	{
 		if (data.size() == 2)
@@ -86,7 +98,7 @@ public class Node {
 			total ++;
 		}
 		
-		System.out.println("Postive: " + positives + " Negative: " + negatives + " Total: " + total);
+//		System.out.println("Postive: " + positives + " Negative: " + negatives + " Total: " + total);
 		
 		double pValue, nValue, pFraction, nFraction;
 		pFraction = (double) positives / total;
@@ -95,35 +107,29 @@ public class Node {
 		nValue = Math.log(nFraction) / Math.log(2);
 		
 		double value = -(pFraction * pValue) - (nFraction * nValue);
-		System.out.println("P Value: " + pValue + " N Value " + nValue);
-		System.out.println("I Value: " + value);
+//		System.out.println("P Value: " + pValue + " N Value " + nValue);
+//		System.out.println("I Value: " + value);
 		
 		calculateIa(value);
 	}
 	
-	public void updateData(int column, int direction){
+	public void updateData(int column, boolean left, boolean right){
 	// Creates a new table to look through based on the attribute previously selected
 	// The instance is the row in the table - the s.getColumn(n) looks at the value in the row s at column n
-		if(direction == 1){
-
-			for(Instance s : data)
+		ArrayList<Instance> temp = new ArrayList<Instance>(data);
+		for(Instance s : data)
+		{
+			if(left && s.getColumn(column) == 1)
 			{
-				if(s.getColumn(column) == 1)
-				{
-//					data2.add(s);
-				}
+				temp.remove(s);
+			}
+			if(right && s.getColumn(column) == 0)
+			{
+				temp.remove(s);
 			}
 		}
-		else {
-			for(Instance s : data)
-			{
-				if(s.getColumn(column) == 0)
-				{
-//					data2.add(s);
-				}
-			}
-		}
-//		System.out.println(data2.size());
+		System.out.println("Temp size: " + temp.size());
+		data = temp;
 	}
 	
 	public void calculateIa(double iValue)
@@ -131,7 +137,7 @@ public class Node {
 		// Calculates the Ia value for an attribute
 		int column = 0, gainColumn = 0;
 		double iaValue, temp, gain = 0.0;
-		boolean leftDone = false, rightDone = false;
+		boolean leftDone = false, rightDone = false, neg = false;
 		
 		while (column < attributes.size())
 		{
@@ -159,36 +165,30 @@ public class Node {
 				
 				total++;
 			}
-//			System.out.println("\n" + attributes.get(column));
-//			System.out.println("total: " + total);
-//			System.out.println("All Pos: " + allPositive + " Neg Pos: " + negPos + " Pos Neg: " + posNeg + " All Neg: " + allNegative);
+
+			System.out.println("\n" + attributes.get(column) + " All Pos: " + allPositive + " Neg Pos: " + negPos + " Pos Neg: " + posNeg + " All Neg: " + allNegative);
 			
 			iaValue = calculateInformationContent(allPositive, allNegative, posNeg, negPos, total);
 			temp = calculateGain(iValue, iaValue);
-//			System.out.println("Gain: " + temp);
-			if (column == 0)
-			{
-				gain = calculateGain(iValue, iaValue);
-			}
 			
-			if (temp > gain)
+			System.out.println("Temp: " + temp + " Gain: " + gain);
+			
+			if (temp > gain || column == 0)
 			{
 				gain = temp;
 				gainColumn = column;
-				if(posNeg == 0)
+				if(posNeg == 0 || allPositive == 0)
 				{
 					leftDone = true;
 					rightDone = false;
+					neg = false;
 				}
-				else if (negPos == 0)
+
+				if (negPos == 0 || allNegative == 0)
 				{
 					rightDone = true;
 					leftDone = false;
-				}
-				else
-				{
-					leftDone = false;
-					rightDone = false;
+					neg = true;
 				}
 			}
 			
@@ -196,17 +196,19 @@ public class Node {
 		}
 		this.attribute = attributes.get(gainColumn);
 		
-//		System.out.println("\nGain: " + gain + " gainColumn: " + gainColumn + " Attribute: " + attributes.get(gainColumn));
+		System.out.println("\nGain: " + gain + " gainColumn: " + gainColumn + " Attribute: " + attributes.get(gainColumn));
 		
 		attributes.remove(gainColumn);
 		//Removes the attribute that was selected and updates the Data to create a new table to evaluate
 		// Continues evaluation one direction until there are no more children; then moves to the other direction
+		updateData(gainColumn, leftDone, rightDone);
+		
 		for(Instance i : data)
 		{
 			i.removeColumn(gainColumn);
 		}
 		
-		System.out.println(toString());
+		printData();
 		
 		if (!attributes.isEmpty())
 		{
@@ -221,6 +223,8 @@ public class Node {
 			{
 				System.out.println(attribute + " Leftd: ");
 				System.out.println("We are done. what now? \n");
+				Node child = new Node(classificationName, neg);
+				left_yes = child;
 			}
 			
 			if (!rightDone)
@@ -234,6 +238,8 @@ public class Node {
 			{
 				System.out.println(attribute + " Rightd: ");
 				System.out.println("We are done. What now? ");
+				Node child = new Node(classificationName, neg);
+				right_no = child;
 			}
 		}		
 	}
@@ -246,49 +252,50 @@ public class Node {
 		negatives = allNegative + negPos;
 		posFraction = allPositive / positives;
 		negFraction = allNegative / negatives;
-		negPosFraction = negPos / positives;
-		posNegFraction = posNeg / negatives;
-		
+		negPosFraction = negPos / negatives;
+		posNegFraction = posNeg / positives;
+		System.out.println("negFraction: " + negFraction + " negPosLog: " + negPosFraction);
 		double posLog, negPosLog, negLog, posNegLog;
 		
-		if (posFraction == 0)
+		if (posFraction == 0 || posFraction == 1 || Double.isNaN(posFraction))
 		{ 
 			posLog = 0; 
 		}
 		else 
 		{
-			posLog = (-posFraction * (Math.log(posFraction) / Math.log(2)));
+			posLog = -posFraction * (Math.log(posFraction) / Math.log(2));
 		}
 		
-		if (negPosFraction == 0) 
+		if (negPosFraction == 0 || negPosFraction == 1 || Double.isNaN(negPosFraction)) 
 		{ 
 			negPosLog = 0; 
 		}
 		else
 		{
-			negPosLog = (-negPosFraction * (Math.log(negPosFraction)/ Math.log(2)));
+			negPosLog = -negPosFraction * (Math.log(negPosFraction)/ Math.log(2));
 		}
 
-		if(negFraction == 0)
+		if(negFraction == 0 || negFraction == 1 || Double.isNaN(negFraction))
 		{
 			negLog = 0;
 		}
 		else 
 		{
-			negLog = (-negFraction * (Math.log(negFraction) / Math.log(2)));
+			negLog = -negFraction * (Math.log(negFraction) / Math.log(2));
 		}
 
-		if(posNegFraction == 0)
+		if(posNegFraction == 0 || posNegFraction == 1|| Double.isNaN(posNegFraction))
 		{
 			posNegLog = 0;
 		}
 		else
 		{
-			posNegLog = (-posNegFraction * (Math.log(posNegFraction) / Math.log(2)));
+			posNegLog = -posNegFraction * (Math.log(posNegFraction) / Math.log(2));
 		}
-
-		double positiveSide = positives/total * (posLog + negPosLog);
-		double negativeSide = negatives/total * (negLog + posNegLog);
+		System.out.println("PosLog: " + posLog + " PosNegLog: " + posNegLog);
+		System.out.println("NegLog: " + negLog + " NegPosLog: " + negPosLog);
+		double positiveSide = (positives/total) * (posLog + posNegLog);
+		double negativeSide = (negatives/total) * (negLog + negPosLog);
 
 		double value = positiveSide + negativeSide;
 //		System.out.println(value);
@@ -301,22 +308,21 @@ public class Node {
 		return iValue - iaValue;
 	}
 	
-	public void addLeftNode()
+	public void printData()
 	{
-		ArrayList<Instance> newData = new ArrayList<Instance>(data);
-		
-		for(Instance s : newData)
+		for(Instance s : data)
 		{
-			if (s.getColumn(1) == 0)
-			{
-				
-			}
+			s.printData();
 		}
 	}
 	
 	public String toString()
 	{
-		String s =  attribute ;
+		String s =  attribute;
+		if (!label.isEmpty())
+		{
+			s += label;
+		}
 		
 		return s;
 	}
