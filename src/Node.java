@@ -21,10 +21,10 @@ public class Node {
 		this.parent = parent;
 	}
 	
-	public Node(String attribute, boolean neg)
+	public Node(String attribute, int neg)
 	{
 		this.attribute = attribute;
-		if(neg)
+		if(neg >= 2)
 		{
 			this.label = " - False";
 		}
@@ -131,9 +131,9 @@ public class Node {
 	public void calculateIa(double iValue)
 	{
 		// Calculates the Ia value for an attribute
-		int column = 0, gainColumn = 0;
+		int column = 0, gainColumn = 0, neg = 0;
 		double iaValue, temp, gain = 0.0;
-		boolean leftDone = true, rightDone = true, neg = false;
+		boolean leftDone = true, rightDone = true;
 		
 		while (column < attributes.size())
 		{
@@ -178,14 +178,23 @@ public class Node {
 				{
 					leftDone = true;
 					rightDone = false;
-					neg = false;
+					neg = 1;
 				}
 
 				if (negPos == 0 || allNegative == 0)
 				{
 					rightDone = true;
 					leftDone = false;
-					neg = true;
+					neg = 2;
+				}
+				
+				if((negPos == 0 || allNegative == 0) && (posNeg == 0 || allPositive == 0))
+				{
+					rightDone = true;
+					leftDone = true;
+					neg = majority(gainColumn);
+					System.out.println("negPos: " + negPos + " allNegative: " + allNegative);
+					System.out.println("posNeg: " + posNeg + " allPositive: " + allPositive);
 				}
 			}
 			
@@ -221,6 +230,7 @@ public class Node {
 			{
 				System.out.println(attribute + " Rightd: ");
 				System.out.println("We are done. what now? \n");
+				System.out.println(neg);
 				Node child = new Node(classificationName, neg);
 				left_no = child;
 			}
@@ -236,6 +246,7 @@ public class Node {
 			{
 				System.out.println(attribute + " Leftd: ");
 				System.out.println("We are done. What now? ");
+				System.out.println(neg);
 				Node child = new Node(classificationName, neg);
 				right_yes = child;
 			}
@@ -288,6 +299,7 @@ public class Node {
 		{
 			posNegLog = -posNegFraction * (Math.log(posNegFraction) / Math.log(2));
 		}
+		
 		System.out.println("PosLog: " + posLog + " PosNegLog: " + posNegLog);
 		System.out.println("NegLog: " + negLog + " NegPosLog: " + negPosLog);
 		double positiveSide = (positives/total) * (posLog + posNegLog);
@@ -298,6 +310,30 @@ public class Node {
 		System.out.println( "value = " + value );
 
 		return value;
+	}
+	
+	public int majority(int column)
+	{
+		int no = 0;
+		int yes = 0;
+		
+		for(Instance i : data)
+		{
+			if (i.getColumn(column) == 0)
+			{
+				no++;
+			}
+			else
+			{
+				yes++;
+			}
+		}
+		
+		if(no >= yes)
+		{
+			return 2;
+		}
+		return 1;
 	}
 	
 	public double calculateGain(double iValue, double iaValue)
