@@ -48,7 +48,6 @@ public class Instance {
 	
 	public void removeColumn(int i)
 	{
-		System.out.println("Removing:" + data.get(i));
 		data.remove(i);
 	}
 	

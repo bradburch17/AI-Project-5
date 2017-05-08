@@ -71,7 +71,7 @@ public class Driver {
 	public static void main(String[] args)
 	{
 		parseFile();
-		root = new Node(null, "", attributes, data);
+		root = new Node(null, attributes, data);
 		root.calculateI();
 		print();
 	}
@@ -84,15 +84,15 @@ public class Driver {
 	public static void printAux(Node node, String padding)
 	{
 		System.out.println(padding + node);
-		if (node.left_yes != null)
+		if (node.left_no != null)
 		{
 			System.out.println(padding + "  Yes: ");
-			printAux(node.left_yes, (padding + "   "));
+			printAux(node.left_no, (padding + "   "));
 		}
-		if(node.right_no != null)
+		if(node.right_yes != null)
 		{
 			System.out.println(padding + "  No: ");
-			printAux(node.right_no, (padding + "      "));
+			printAux(node.right_yes, (padding + "      "));
 		}
 	}
 	
