@@ -113,23 +113,32 @@ public class Node {
 		calculateIa(value);
 	}
 	
-	public void updateData(int column, boolean left, boolean right){
+	public ArrayList<Instance> updateData(int column, boolean left, boolean right){
 	// Creates a new table to look through based on the attribute previously selected
 	// The instance is the row in the table - the s.getColumn(n) looks at the value in the row s at column n
 		ArrayList<Instance> temp = new ArrayList<Instance>(data);
+		
 		for(Instance s : data)
 		{
 			if(left && s.getColumn(column) == 1)
 			{
 				temp.remove(s);
 			}
+			
 			if(right && s.getColumn(column) == 0)
 			{
 				temp.remove(s);
 			}
 		}
+
 		System.out.println("Temp size: " + temp.size());
-		data = temp;
+		
+		for(Instance q : temp)
+		{
+			q.printData();
+		}
+
+		return temp;
 	}
 	
 	public void calculateIa(double iValue)
@@ -201,10 +210,17 @@ public class Node {
 		attributes.remove(gainColumn);
 		//Removes the attribute that was selected and updates the Data to create a new table to evaluate
 		// Continues evaluation one direction until there are no more children; then moves to the other direction
-		updateData(gainColumn, leftDone, rightDone);
+		ArrayList<Instance> temp1 = new ArrayList<Instance>();
+		temp1 = updateData(gainColumn, leftDone, rightDone);
 		
-		for(Instance i : data)
+		for(Instance i : temp1)
 		{
+			i.printData();
+		}
+		
+		for(Instance i : temp1)
+		{
+			i.printData();
 			i.removeColumn(gainColumn);
 		}
 		
@@ -215,7 +231,7 @@ public class Node {
 			if (!leftDone)
 			{
 				System.out.println(attribute + " Left: ");
-				Node child = new Node(this, "	", attributes, data);
+				Node child = new Node(this, "	", attributes, temp1);
 				child.calculateI();
 				left_yes = child;
 			}

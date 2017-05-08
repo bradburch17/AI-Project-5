@@ -17,8 +17,6 @@ public class Instance {
 				data.add( Integer.parseInt(String.valueOf(array[i])) );
 			}
 		}
-		
-//		printData();
 	}
 	
 	public int getColumn(int column)
@@ -50,6 +48,7 @@ public class Instance {
 	
 	public void removeColumn(int i)
 	{
+		System.out.println("Removing:" + data.get(i));
 		data.remove(i);
 	}
 	
