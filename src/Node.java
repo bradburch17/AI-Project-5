@@ -248,7 +248,16 @@ public class Node {
 				System.out.println("We are done. What now? ");
 				System.out.println(neg);
 				Node child = new Node(classificationName, neg);
-				right_yes = child;
+				right_yes = child;	
+			}
+			
+			if(rightDone && leftDone)
+			{
+				System.out.println("neg: " + neg);
+				Node child = new Node(classificationName, neg-2);
+				Node child2 = new Node(classificationName, neg);
+				right_yes = child;	
+				left_no = child2;
 			}
 		}		
 	}
