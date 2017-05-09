@@ -14,21 +14,19 @@ public class Node {
 	
 	public Node(Node parent, ArrayList<String> attributes, ArrayList<Instance> data)
 	{
-		System.out.println();
-
 		this.attributes = new ArrayList<String>(attributes);
 		this.data = new ArrayList<Instance>(data);
 		this.parent = parent;
 	}
 	
-	public Node(String attribute, int neg)
+	public Node(String attribute, boolean negL, boolean negR)
 	{
 		this.attribute = attribute;
-		if(neg >= 2)
+		if(negR)
 		{
 			this.label = " - False";
 		}
-		else
+		else if (negL)
 		{
 			this.label = " - True";
 		}
@@ -51,7 +49,6 @@ public class Node {
 	public ArrayList<Instance> updateData(int column, boolean left, boolean right)
 	{
 		ArrayList<Instance> temp = new ArrayList<Instance>(data);
-		
 		for(Instance s : data)
 		{
 			if(left && s.getColumn(column) == 1)
@@ -63,13 +60,6 @@ public class Node {
 			{
 				temp.remove(s);
 			}
-		}
-
-		System.out.println("Temp size: " + temp.size());
-		
-		for(Instance q : temp)
-		{
-			q.printData();
 		}
 
 		return temp;
@@ -116,7 +106,6 @@ public class Node {
 			nFraction = (double) negatives / total;
 			nValue = Math.log(nFraction) / Math.log(2);
 		}
-		System.out.println("pFraction: " + pFraction + " nFraction: " + nFraction); 
 		
 		double value = -(pFraction * pValue) - (nFraction * nValue);
 		if (value == -0.0)
@@ -131,9 +120,9 @@ public class Node {
 	public void calculateIa(double iValue)
 	{
 		// Calculates the Ia value for an attribute
-		int column = 0, gainColumn = 0, neg = 0;
+		int column = 0, gainColumn = 0;
 		double iaValue, temp, gain = 0.0;
-		boolean leftDone = true, rightDone = true;
+		boolean leftDone = true, rightDone = false, negL = false, negR = true;
 		
 		while (column < attributes.size())
 		{
@@ -161,40 +150,48 @@ public class Node {
 				
 				total++;
 			}
-
-			System.out.println("\n" + attributes.get(column) + " All Pos: " + allPositive + " Neg Pos: " + negPos + " Pos Neg: " + posNeg + " All Neg: " + allNegative);
 			
 			iaValue = calculateInformationContent(allPositive, allNegative, posNeg, negPos, total);
-			System.out.println( "iValue = " + iValue + " iaValue = " + iaValue );
 			temp = calculateGain(iValue, iaValue);
-			
-			System.out.println("Temp: " + temp + " Gain: " + gain);
-			
+						
 			if (temp > gain || column == 0)
 			{
 				gain = temp;
 				gainColumn = column;
+				leftDone = true;
+				rightDone = false;
+				
 				if(posNeg == 0 || allPositive == 0)
 				{
 					leftDone = true;
 					rightDone = false;
-					neg = 1;
+					negL = true;
+					negR = false;
 				}
 
 				if (negPos == 0 || allNegative == 0)
 				{
 					rightDone = true;
 					leftDone = false;
-					neg = 2;
+					negL = false;
+					negR = true;
 				}
 				
 				if((negPos == 0 || allNegative == 0) && (posNeg == 0 || allPositive == 0))
 				{
 					rightDone = true;
 					leftDone = true;
-					neg = majority(gainColumn);
-					System.out.println("negPos: " + negPos + " allNegative: " + allNegative);
-					System.out.println("posNeg: " + posNeg + " allPositive: " + allPositive);
+
+					if (allNegative == 0)
+					{
+						negR = true;
+						negL = false;
+					}
+					else if (negPos == 0)
+					{
+						negR = false;
+						negL = true;
+					}
 				}
 			}
 			
@@ -203,8 +200,8 @@ public class Node {
 
 		this.attribute = attributes.get(gainColumn);
 		
-		System.out.println("\nGain: " + gain + " gainColumn: " + gainColumn + " Attribute: " + attributes.get(gainColumn));
-		
+		ArrayList<String> newAttributes = new ArrayList<String>(attributes);
+		newAttributes.remove(gainColumn);
 		attributes.remove(gainColumn);
 		
 		ArrayList<Instance> temp1 = new ArrayList<Instance>();
@@ -221,41 +218,32 @@ public class Node {
 		{
 			if (!leftDone)
 			{//We may have gotten the Right and left confused during variable naming, but they are consistent so it works
-				System.out.println(attribute + " Right: ");
-				Node child = new Node(this, attributes, temp1);
+				Node child = new Node(this, newAttributes, temp1);
 				child.calculateI();
 				left_no = child;
 			}
 			else if (leftDone)
 			{
-				System.out.println(attribute + " Rightd: ");
-				System.out.println("We are done. what now? \n");
-				System.out.println(neg);
-				Node child = new Node(classificationName, neg);
+				Node child = new Node(classificationName, negL, negR);
 				left_no = child;
 			}
 			
 			if (!rightDone)
 			{
-				System.out.println(attribute + " Left: ");
-				Node child = new Node(this, attributes, temp2);
+				Node child = new Node(this, newAttributes, temp2);
 				child.calculateI();
 				right_yes = child;
 			}
 			else if (rightDone)
 			{
-				System.out.println(attribute + " Leftd: ");
-				System.out.println("We are done. What now? ");
-				System.out.println(neg);
-				Node child = new Node(classificationName, neg);
+				Node child = new Node(classificationName, negL, negR);
 				right_yes = child;	
 			}
 			
 			if(rightDone && leftDone)
 			{
-				System.out.println("neg: " + neg);
-				Node child = new Node(classificationName, neg-2);
-				Node child2 = new Node(classificationName, neg);
+				Node child = new Node(classificationName, negR, negL);
+				Node child2 = new Node(classificationName, negL, negR);
 				right_yes = child;	
 				left_no = child2;
 			}
@@ -309,14 +297,10 @@ public class Node {
 			posNegLog = -posNegFraction * (Math.log(posNegFraction) / Math.log(2));
 		}
 		
-		System.out.println("PosLog: " + posLog + " PosNegLog: " + posNegLog);
-		System.out.println("NegLog: " + negLog + " NegPosLog: " + negPosLog);
 		double positiveSide = (positives/total) * (posLog + posNegLog);
 		double negativeSide = (negatives/total) * (negLog + negPosLog);
 
-		System.out.println( "positiveSide = " + positiveSide + " negativeSide = " + negativeSide );
 		double value = positiveSide + negativeSide;
-		System.out.println( "value = " + value );
 
 		return value;
 	}
